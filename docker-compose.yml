@@ -1,0 +1,58 @@
+version: '2'
+services:
+    db:
+        build: mysql
+        hostname: ssgdb
+        container_name: ssgdb
+        environment:
+            MYSQL_ROOT_PASSWORD: password
+        expose:
+            - 3306
+        volumes:
+            - /APL/share:/APL/share
+            - /APL/ssg/mysql/data:/var/lib/mysql
+        networks:
+          app_net:
+            ipv4_address: 172.21.1.11
+        extra_hosts:
+          - "ssg:172.21.1.10"
+          - "ssg.l7tech.com:172.21.1.10"
+          - "db:172.21.1.11"
+    ssg:
+        build:
+            context: ssg
+            args:
+                HTTP_PROXY: ${HTTP_PROXY}
+                HTTPS_PROXY: ${HTTPS_PROXY}
+                http_proxy: ${http_proxy}
+                https_proxy: ${https_proxy}
+        hostname: ssg.l7tech.com
+        container_name: ssg
+        environment:
+          HTTP_PROXY: ${HTTP_PROXY}
+          HTTPS_PROXY: ${HTTPS_PROXY}
+          http_proxy: ${http_proxy}
+          https_proxy: ${https_proxy}
+        volumes:
+            - /APL/share:/APL/share
+        ports:
+            - 443:8443
+            - 80:8080
+            - 8022:2022
+        extra_hosts:
+          - "ssg:172.21.1.10"
+          - "ssg.l7tech.com:172.21.1.10"
+          - "db:172.21.1.11"
+        command: bash -c 'service rsyslog start && service crond start && service sshd start && tail -f /var/log/messages'
+        networks:
+          app_net:
+            ipv4_address: 172.21.1.10
+
+networks:
+  app_net:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.21.1.0/24
+          gateway: 172.21.1.1
