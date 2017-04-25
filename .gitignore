@@ -2,3 +2,4 @@
 /ssg/*.tar.gz
 /ssg/rootca.crt
 /var
+/ssg/ssg-9.1.00-6342.noarch.rpm

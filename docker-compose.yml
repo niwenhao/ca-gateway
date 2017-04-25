@@ -1,52 +1,149 @@
 version: '2'
 services:
+    ca:
+#      build:
+#          context: ssg
+#          args:
+#              HTTP_PROXY: ${HTTP_PROXY}
+#              HTTPS_PROXY: ${HTTPS_PROXY}
+#              http_proxy: ${http_proxy}
+#              https_proxy: ${https_proxy}
+#      image: ca-gateway:centos6
+      image: ca-gateway:test
+      hostname: ssg.l7tech.com
+      container_name: ssg
+      environment:
+        HTTP_PROXY: ${HTTP_PROXY}
+        HTTPS_PROXY: ${HTTPS_PROXY}
+        http_proxy: ${http_proxy}
+        https_proxy: ${https_proxy}
+      volumes:
+          - /APL/share:/APL/share
+      ports:
+          - 443:8443
+          - 80:8080
+          - 8022:2022
+          - 33061:3306
+      extra_hosts:
+        - "ssg:172.21.1.10"
+        - "mfw:172.21.1.11"
+        - "starmf:172.21.1.12"
+        - "mfwdb:172.21.1.13"
+        - "ssg.l7tech.com:172.21.1.10"
+        - "ssg11.l7tech.com:172.21.1.10"
+        - "www.maneyforward.co.jp:192.168.138.11"
+      #command: bash -c 'service rsyslog start && service crond start && service sshd start && service mysqld start && sudo -u gateway /opt/SecureSpan/Gateway/runtime/bin/gateway.sh stop && sudo -u gateway /opt/SecureSpan/Gateway/runtime/bin/gateway.sh start && vmstat 10'
+      command: bash -c 'service rsyslog restart && service crond restart && service sshd restart && service mysqld restart && sudo -u gateway /opt/SecureSpan/Gateway/runtime/bin/gateway.sh stop && sudo -u gateway /opt/SecureSpan/Gateway/runtime/bin/gateway.sh start && cd /opt/SecureSpan/Gateway/node/default/var/logs && sleep 3 && tail -f `ls -t | head -1`'
+      #command: bash -c 'service rsyslog restart && service crond restart && service sshd restart && service mysqld restart && vmstat 10'
+      #command: bash -c 'while true; do sleep 10; done'
+      networks:
+        app_net:
+          ipv4_address: 172.21.1.10
+    mfw:
+#      build:
+#        context: mfw
+#        args:
+#            HTTP_PROXY: ${HTTP_PROXY}
+#            HTTPS_PROXY: ${HTTPS_PROXY}
+#            http_proxy: ${http_proxy}
+#            https_proxy: ${https_proxy}
+      image: mfw-application
+      hostname: mfw
+      container_name: mfw
+      environment:
+        HTTP_PROXY: ${HTTP_PROXY}
+        HTTPS_PROXY: ${HTTPS_PROXY}
+        http_proxy: ${http_proxy}
+        https_proxy: ${https_proxy}
+        CURL_CA_BUNDLE: "/etc/rootca.crt"
+      volumes:
+          - /APL/share:/APL/share
+          - /home/nwh/workspace/StarMFMock:/APL/StarMFMock
+      ports:
+        - 3000:3000
+      extra_hosts:
+        - "ssg:172.21.1.10"
+        - "mfw:172.21.1.11"
+        - "starmf:172.21.1.12"
+        - "mfwdb:172.21.1.13"
+        - "ssg.l7tech.com:172.21.1.10"
+        - "ssg11.l7tech.com:172.21.1.10"
+        - "www.maneyforward.co.jp:192.168.138.11"
+#      command: bash -c 'while true; do sleep 10; done'
+      command: bash -c 'rm -f /APL/StarMFMock/tmp/pids/server.pid && bundle exec rails s -b 0.0.0.0'
+      networks:
+        app_net:
+          ipv4_address: 172.21.1.11
+    mf:
+#      build:
+#        context: starmf
+#        args:
+#            HTTP_PROXY: ${HTTP_PROXY}
+#            HTTPS_PROXY: ${HTTPS_PROXY}
+#            http_proxy: ${http_proxy}
+#            https_proxy: ${https_proxy}
+      image: starmf-application
+      hostname: starmf
+      container_name: mf
+      environment:
+        HTTP_PROXY: ${HTTP_PROXY}
+        HTTPS_PROXY: ${HTTPS_PROXY}
+        http_proxy: ${http_proxy}
+        https_proxy: ${https_proxy}
+        CURL_CA_BUNDLE: "/etc/rootca.crt"
+      volumes:
+          - /APL/share:/APL/share
+          - /home/nwh/workspace/StarMFWebService:/APL/StarMFWebService
+      ports:
+        - 4000:4000
+#      command: bash -c 'while true; do sleep 10; done'
+      command: bash -c 'tsc && node dist/server.js'
+      extra_hosts:
+        - "ssg:172.21.1.10"
+        - "mfw:172.21.1.11"
+        - "starmf:172.21.1.12"
+        - "mfwdb:172.21.1.13"
+        - "ssg.l7tech.com:172.21.1.10"
+        - "ssg11.l7tech.com:172.21.1.10"
+        - "www.maneyforward.co.jp:192.168.138.11"
+      networks:
+        app_net:
+          ipv4_address: 172.21.1.12
     db:
-        build: mysql
-        hostname: ssgdb
-        container_name: ssgdb
-        environment:
-            MYSQL_ROOT_PASSWORD: password
-        expose:
-            - 3306
-        volumes:
-            - /APL/share:/APL/share
-            - /APL/ssg/mysql/data:/var/lib/mysql
-        networks:
-          app_net:
-            ipv4_address: 172.21.1.11
-        extra_hosts:
-          - "ssg:172.21.1.10"
-          - "ssg.l7tech.com:172.21.1.10"
-          - "db:172.21.1.11"
-    ssg:
-        build:
-            context: ssg
-            args:
-                HTTP_PROXY: ${HTTP_PROXY}
-                HTTPS_PROXY: ${HTTPS_PROXY}
-                http_proxy: ${http_proxy}
-                https_proxy: ${https_proxy}
-        hostname: ssg.l7tech.com
-        container_name: ssg
-        environment:
-          HTTP_PROXY: ${HTTP_PROXY}
-          HTTPS_PROXY: ${HTTPS_PROXY}
-          http_proxy: ${http_proxy}
-          https_proxy: ${https_proxy}
-        volumes:
-            - /APL/share:/APL/share
-        ports:
-            - 443:8443
-            - 80:8080
-            - 8022:2022
-        extra_hosts:
-          - "ssg:172.21.1.10"
-          - "ssg.l7tech.com:172.21.1.10"
-          - "db:172.21.1.11"
-        command: bash -c 'service rsyslog start && service crond start && service sshd start && tail -f /var/log/messages'
-        networks:
-          app_net:
-            ipv4_address: 172.21.1.10
+      build:
+        context: mariadb
+        args:
+            HTTP_PROXY: ${HTTP_PROXY}
+            HTTPS_PROXY: ${HTTPS_PROXY}
+            http_proxy: ${http_proxy}
+            https_proxy: ${https_proxy}
+      image: mfw-db
+      hostname: mariadb
+      container_name: mfwdb
+      environment:
+        HTTP_PROXY: ${HTTP_PROXY}
+        HTTPS_PROXY: ${HTTPS_PROXY}
+        http_proxy: ${http_proxy}
+        https_proxy: ${https_proxy}
+        CURL_CA_BUNDLE: "/etc/rootca.crt"
+        MYSQL_ROOT_PASSWORD: password
+      volumes:
+          - /APL/share:/APL/share
+          - /home/nwh/workspace/ca-gateway/var/lib/mysql:/var/lib/mysql
+      ports:
+        - 33062:3306
+      #command: bash -c 'while true; do sleep 10; done'
+      extra_hosts:
+        - "ssg:172.21.1.10"
+        - "mfw:172.21.1.11"
+        - "starmf:172.21.1.12"
+        - "mfwdb:172.21.1.13"
+        - "ssg.l7tech.com:172.21.1.10"
+        - "ssg11.l7tech.com:172.21.1.10"
+        - "www.maneyforward.co.jp:192.168.138.11"
+      networks:
+        app_net:
+          ipv4_address: 172.21.1.13
 
 networks:
   app_net:
