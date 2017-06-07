@@ -9,7 +9,8 @@ services:
 #              http_proxy: ${http_proxy}
 #              https_proxy: ${https_proxy}
 #      image: ca-gateway:centos6
-      image: ca-gateway:test
+#      image: ca-gateway:test
+      image: ca-gateway
       hostname: ssg.l7tech.com
       container_name: ssg
       environment:
@@ -39,6 +40,32 @@ services:
       networks:
         app_net:
           ipv4_address: 172.21.1.10
+    jboss:
+#       build:
+#         context: jboss
+      image: mfw-java-app
+      hostname: jboss
+      container_name: jboss
+      environment:
+        HTTP_PROXY: ${HTTP_PROXY}
+        HTTPS_PROXY: ${HTTPS_PROXY}
+        http_proxy: ${http_proxy}
+        https_proxy: ${https_proxy}
+        CURL_CA_BUNDLE: "/etc/rootca.crt"
+      ports:
+        - 8080:8080
+      extra_hosts:
+        - "ssg:172.21.1.10"
+        - "mfw:172.21.1.11"
+        - "starmf:172.21.1.12"
+        - "mfwdb:172.21.1.13"
+        - "ssg.l7tech.com:172.21.1.10"
+        - "ssg11.l7tech.com:172.21.1.10"
+        - "www.maneyforward.co.jp:192.168.138.11"
+      #command: bash -c 'while true; do sleep 10; done'
+      networks:
+        app_net:
+          ipv4_address: 172.21.1.14
     mfw:
 #      build:
 #        context: mfw
@@ -69,8 +96,8 @@ services:
         - "ssg.l7tech.com:172.21.1.10"
         - "ssg11.l7tech.com:172.21.1.10"
         - "www.maneyforward.co.jp:192.168.138.11"
-#      command: bash -c 'while true; do sleep 10; done'
-      command: bash -c 'rm -f /APL/StarMFMock/tmp/pids/server.pid && bundle exec rails s -b 0.0.0.0'
+      command: bash -c 'while true; do sleep 10; done'
+#      command: bash -c 'rm -f /APL/StarMFMock/tmp/pids/server.pid && bundle exec rails s -b 0.0.0.0'
       networks:
         app_net:
           ipv4_address: 172.21.1.11
@@ -97,7 +124,8 @@ services:
       ports:
         - 4000:4000
 #      command: bash -c 'while true; do sleep 10; done'
-      command: bash -c 'tsc && node dist/server.js'
+#      command: bash -c 'tsc && node dist/server.js'
+      command: bash -c 'node dist/server.js'
       extra_hosts:
         - "ssg:172.21.1.10"
         - "mfw:172.21.1.11"
@@ -110,13 +138,13 @@ services:
         app_net:
           ipv4_address: 172.21.1.12
     db:
-      build:
-        context: mariadb
-        args:
-            HTTP_PROXY: ${HTTP_PROXY}
-            HTTPS_PROXY: ${HTTPS_PROXY}
-            http_proxy: ${http_proxy}
-            https_proxy: ${https_proxy}
+#       build:
+#         context: mariadb
+#         args:
+#             HTTP_PROXY: ${HTTP_PROXY}
+#             HTTPS_PROXY: ${HTTPS_PROXY}
+#             http_proxy: ${http_proxy}
+#             https_proxy: ${https_proxy}
       image: mfw-db
       hostname: mariadb
       container_name: mfwdb

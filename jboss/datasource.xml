@@ -1,0 +1,12 @@
+                <datasource jta="true" jndi-name="java:jboss/datasources/CAServiceConsume" pool-name="CAServiceConsume" enabled="true" use-java-context="true" use-ccm="true">
+                    <connection-url>jdbc:mysql://mfwdb:3306/ca_service_consume</connection-url>
+                    <driver>mysql</driver>
+                    <security>
+                        <user-name>ca</user-name>
+                        <password>password</password>
+                    </security>
+                    <statement>
+                        <prepared-statement-cache-size>32</prepared-statement-cache-size>
+                        <share-prepared-statements>true</share-prepared-statements>
+                    </statement>
+                </datasource>
